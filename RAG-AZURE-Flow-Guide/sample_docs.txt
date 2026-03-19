@@ -1,0 +1,9 @@
+Azure is a cloud computing platform by Microsoft. It provides services like virtual machines, storage, networking, and AI tools.
+
+Azure Key Vault is used to securely store secrets such as API keys, passwords, and certificates.
+
+OpenAI provides powerful language models like GPT-4, which can be used for chatbots, summarization, and question answering.
+
+Retrieval-Augmented Generation (RAG) combines document retrieval with LLMs to provide accurate and context-aware answers.
+
+FAISS is a library developed by Facebook for efficient similarity search and clustering of dense vectors.
