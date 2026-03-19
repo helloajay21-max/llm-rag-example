@@ -1,7 +1,7 @@
 from azure.identity import DefaultAzureCredential
 from azure.keyvault.secrets import SecretClient
 
-KV_URL = "https://ajayvault21.vault.azure.net/"
+KV_URL = "Put Your Azure URL"
 
 credential = DefaultAzureCredential()
 client = SecretClient(vault_url=KV_URL, credential=credential)
