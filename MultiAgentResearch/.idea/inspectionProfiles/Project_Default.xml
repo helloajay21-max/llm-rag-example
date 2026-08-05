@@ -1,0 +1,18 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <list>
+          <option value="openai" />
+          <option value="azure-identity" />
+          <option value="azure-keyvault-secrets" />
+          <option value="faiss-cpu" />
+          <option value="streamlit" />
+          <option value="numpy" />
+          <option value="PyPDF2" />
+        </list>
+      </option>
+    </inspection_tool>
+  </profile>
+</component>

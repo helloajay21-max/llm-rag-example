@@ -1,0 +1,10 @@
+langchain-openai
+langchain-core
+langgraph
+duckduckgo-search
+python-dotenv
+truststore
+streamlit
+plotly
+starlette==0.47.3
+uvicorn==0.38.0
