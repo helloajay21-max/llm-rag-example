@@ -1,0 +1,7 @@
+openai
+azure-identity
+azure-keyvault-secrets
+faiss-cpu
+streamlit
+numpy
+PyPDF2
