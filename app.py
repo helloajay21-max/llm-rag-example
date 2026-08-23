@@ -12,8 +12,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-st.set_page_config(page_title="MCP Project", layout="wide")
-st.title("MCP Project - Streamlit UI")
+st.set_page_config(page_title="AI Data Workspace", layout="wide")
+st.title("AI Data Workspace")
 
 # ============================================================
 # SIDEBAR: APPLICATION MODE SELECTOR
@@ -415,7 +415,7 @@ ai_mode = "general"
 # ============================================================
 if mode == "Upload and Analyze":
     st.markdown(
-        "Upload your data file (CSV, Excel, or PDF) or use the sample dataset to explore and analyze with AI."
+        "Upload a file (CSV, Excel, or PDF) or use the sample dataset to explore data, review insights, and ask guided AI questions."
     )
 
     # Download sample data

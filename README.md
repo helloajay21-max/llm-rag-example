@@ -1,18 +1,37 @@
-MCP Project — Streamlit UI
+AI Data Workspace
 
-This repository contains a minimal Streamlit app packaged for deployment to Azure App Service (Linux) using a Docker container. The GitHub Actions workflow builds the image, pushes it to Docker Hub, and updates the Web App to use the new image.
+This project is a multi-mode Streamlit application for working with uploaded data and AI-driven analysis. It supports three focused modes:
 
-Quick start (local):
+- Upload and Analyze: work with CSV, Excel, or PDF files, inspect data preview, view summary statistics, and interact with AI in a grounded data-analysis mode.
+- SQL Explorer: query SQLite data, add rows manually, and bulk-import CSV/Excel files into the local database.
+- General Assistant: answer broader questions using the current date, general knowledge, and a separate prompt template.
+
+The app is designed to keep context focused instead of using one generic bot for everything. Separate prompt templates are used for data analysis, SQL analysis, and general knowledge questions.
+
+Local quick start:
 
 1. python -m pip install -r requirements.txt
 2. python -m streamlit run app.py
 
-Azure setup (high level):
+Azure CI/CD deployment:
 
-1. Copy `.env.example` to `.env` and fill Azure + Docker values.
-2. Create an Azure resource group, App Service plan, and Web App (see scripts/create_azure_resources.sh).
-3. Create a service principal and add the JSON to the GitHub secret AZURE_CREDENTIALS.
-4. Add secrets: KEY_VAULT_NAME, RESOURCE_GROUP, WEBAPP_NAME, DOCKERHUB_USERNAME, DOCKERHUB_TOKEN.
-5. Push to GitHub to trigger the workflow .github/workflows/azure-container-deploy.yml.
+This repository includes a GitHub Actions workflow for automatic deployment to Azure App Service using Docker containers.
 
-See README_AZURE.md for end-to-end setup.
+Workflow behavior:
+
+1. Push to the `main` branch.
+2. GitHub Actions logs in to Azure and Docker Hub.
+3. The app is containerized and published to Docker Hub.
+4. The Azure Web App container is updated to the latest image.
+5. App settings such as `OPENAI_API_KEY`, `WEBSITES_PORT`, and `SQLITE_DB_PATH` are configured automatically.
+
+Required GitHub secrets:
+
+- `AZURE_CREDENTIALS`
+- `RESOURCE_GROUP`
+- `WEBAPP_NAME`
+- `DOCKERHUB_USERNAME`
+- `DOCKERHUB_TOKEN`
+- `OPENAI_API_KEY`
+
+Full Azure setup notes are in `README_AZURE.md`.

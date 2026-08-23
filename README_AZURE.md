@@ -1,15 +1,17 @@
-Azure deployment guide (Docker Hub + Azure App Service)
+Azure deployment guide (Docker Hub + Azure App Service + GitHub Actions CI/CD)
+
+This project is set up for automated deployment to Azure App Service using GitHub Actions. The workflow in `.github/workflows/azure-container-deploy.yml` builds a Docker image, pushes it to Docker Hub, and updates the Azure Web App automatically whenever code is pushed to `main`.
 
 1) Fill `.env`
 
 Copy `.env.example` to `.env` and set these values:
 
-- `OPENAI_API_KEY`: used locally.
-- `OPENAI_KEY_FOR_KEYVAULT`: same OpenAI key, used once to write Key Vault secret `OpenAIKey`.
+- `OPENAI_API_KEY`: used for OpenAI calls in local and deployed app runtime.
 - `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`
 - `AZURE_SUBSCRIPTION_ID`, `AZURE_LOCATION`
-- `RESOURCE_GROUP`, `APP_SERVICE_PLAN`, `WEBAPP_NAME`, `KEY_VAULT_NAME`
+- `RESOURCE_GROUP`, `APP_SERVICE_PLAN`, `WEBAPP_NAME`
 - `IMAGE_NAME` (default `mcp-streamlit`)
+- `SQLITE_DB_PATH` (local default is `data.db`)
 
 2) Create Azure resources
 
@@ -17,7 +19,7 @@ Copy `.env.example` to `.env` and set these values:
 ./scripts/create_azure_resources.sh <AZURE_SUBSCRIPTION_ID> <RESOURCE_GROUP> <AZURE_LOCATION> <APP_SERVICE_PLAN> <WEBAPP_NAME> <DOCKERHUB_USERNAME>
 ```
 
-3) Create service principal for GitHub Actions
+3) Create a service principal for GitHub Actions
 
 ```bash
 az ad sp create-for-rbac \
@@ -27,40 +29,45 @@ az ad sp create-for-rbac \
   --sdk-auth > az-creds.json
 ```
 
-4) Put OpenAI key in Key Vault and grant access
-
-```bash
-./scripts/set_keyvault_secret.sh <KEY_VAULT_NAME> "<OPENAI_KEY_FOR_KEYVAULT>"
-APP_ID=$(jq -r .clientId az-creds.json)
-./scripts/grant_kv_access.sh <KEY_VAULT_NAME> "$APP_ID"
-```
-
-5) Add GitHub repository secrets
+4) Add GitHub repository secrets
 
 Required secrets:
-- `AZURE_CREDENTIALS` (content of `az-creds.json`)
-- `KEY_VAULT_NAME`
+
+- `AZURE_CREDENTIALS` = content of `az-creds.json`
 - `RESOURCE_GROUP`
 - `WEBAPP_NAME`
 - `DOCKERHUB_USERNAME`
 - `DOCKERHUB_TOKEN`
+- `OPENAI_API_KEY`
 
-Optional helper:
+Optional helper for secrets creation:
 
 ```bash
-./scripts/add_github_secrets.sh <owner/repo> ./az-creds.json <KEY_VAULT_NAME> <RESOURCE_GROUP> <WEBAPP_NAME>
+./scripts/add_github_secrets.sh <owner/repo> ./az-creds.json <RESOURCE_GROUP> <WEBAPP_NAME>
 ```
 
-Then add `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` in GitHub secrets UI (or with `gh secret set`).
+5) Deploy automatically with CI/CD
 
-6) Deploy
+Push changes to the `main` branch. The GitHub Actions workflow will:
 
-Push to `main` or `master`. Workflow `.github/workflows/azure-container-deploy.yml` will:
-- build and push image to Docker Hub
-- set container image on the Web App
-- set app settings: `OPENAI_API_KEY`, `WEBSITES_PORT=8501`, `SQLITE_DB_PATH=/home/data.db`
-- restart the Web App
+- check out the repository
+- sign in to Azure using `AZURE_CREDENTIALS`
+- log in to Docker Hub
+- build the Docker image
+- push it to Docker Hub
+- update the Azure App Service container
+- set app settings including `OPENAI_API_KEY`, `WEBSITES_PORT=8501`, and `SQLITE_DB_PATH=/home/data.db`
+- restart the Azure Web App
+
+6) Local verification
+
+```bash
+python -m pip install -r requirements.txt
+python -m streamlit run app.py
+```
 
 Security notes:
-- Never commit `.env` or `az-creds.json`.
-- Delete `az-creds.json` after secrets are added.
+
+- Never commit real `.env` or Azure credentials files.
+- Remove `az-creds.json` after the GitHub secrets are configured.
+- Keep `OPENAI_API_KEY` in GitHub repository secrets and Azure app settings, not in source control.
