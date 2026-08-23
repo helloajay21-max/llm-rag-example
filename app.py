@@ -709,9 +709,9 @@ elif mode == "SQL Explorer":
 elif mode == "General Assistant":
     ai_mode = "general"
     st.info(
-        "General Assistant mode: Ask any question - dates, events, coding, math, and more. "
+        "General Assistant mode: Ask broader questions - current dates, holidays, coding, math, and more. "
         "The AI uses its full knowledge base and always knows today's date. "
-        "For data questions, switch to 'Upload and Analyze' or 'SQL Explorer'."
+        "For dataset-specific questions, switch to 'Upload and Analyze' or 'SQL Explorer'."
     )
 
 # ============================================================
@@ -730,7 +730,7 @@ MODE_DESCRIPTIONS = {
     "upload": (
         "**Mode: Data Analysis** - The AI is grounded exclusively in your uploaded dataset. "
         "It uses a dedicated system prompt that restricts answers to the data provided. "
-        "For general questions like 'When is Diwali?', switch to **General Assistant** mode."
+        "For broader or date-aware questions like 'What is the next public holiday?', switch to **General Assistant** mode."
     ),
     "sql": (
         "**Mode: SQL Analysis** - The AI is grounded in your SQL query results. "
@@ -739,8 +739,8 @@ MODE_DESCRIPTIONS = {
     "general": (
         "**Mode: General Assistant** - Three completely separate prompt templates handle context "
         "switching (one per mode, not a single dynamic prompt). The Data Analysis bot answers only "
-        "from uploaded data; the SQL bot answers only from query results; this bot answers anything. "
-        "Today's date is always injected so date queries (e.g. 'When is Diwali this year?') are accurate."
+        "from uploaded data; the SQL bot answers only from query results; this bot answers broader questions. "
+        "Today's date is always injected so date-related queries (for example, 'What is the next public holiday?') stay current and relevant."
     )
 }
 st.info(MODE_DESCRIPTIONS.get(ai_mode, ""))
@@ -796,7 +796,7 @@ if openai_key:
     placeholders = {
         "upload":  "e.g. 'What is the average Value?', 'Which category appears most?', 'Describe trends over time'",
         "sql":     "e.g. 'Summarize this query result', 'What SQL would find the top 5 rows by value?'",
-        "general": "e.g. 'When is Diwali this year?', 'Explain the Model Context Protocol'"
+        "general": "e.g. 'What is the next public holiday?', 'Explain the Model Context Protocol', 'What is 15% of 3500?'"
     }
 
     # Pre-fill from Quick AI Analysis button if queued

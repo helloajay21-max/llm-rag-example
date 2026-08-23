@@ -1,6 +1,6 @@
-Azure deployment guide (Docker Hub + Azure App Service + GitHub Actions CI/CD)
+Azure deployment guide (GitHub → Azure App Service via GitHub Actions CI/CD)
 
-This project is set up for automated deployment to Azure App Service using GitHub Actions. The workflow in `.github/workflows/azure-container-deploy.yml` builds a Docker image, pushes it to Docker Hub, and updates the Azure Web App automatically whenever code is pushed to `main`.
+This project is set up for automated deployment from GitHub to Azure App Service using GitHub Actions. The workflow in `.github/workflows/azure-container-deploy.yml` builds a Docker image, pushes it to Docker Hub, and updates the Azure Web App automatically whenever code is pushed to `main`.
 
 1) Fill `.env`
 
@@ -46,16 +46,16 @@ Optional helper for secrets creation:
 ./scripts/add_github_secrets.sh <owner/repo> ./az-creds.json <RESOURCE_GROUP> <WEBAPP_NAME>
 ```
 
-5) Deploy automatically with CI/CD
+5) Deploy automatically with GitHub → Azure CI/CD
 
 Push changes to the `main` branch. The GitHub Actions workflow will:
 
-- check out the repository
-- sign in to Azure using `AZURE_CREDENTIALS`
+- check out the repository from GitHub
+- authenticate to Azure using `AZURE_CREDENTIALS`
 - log in to Docker Hub
 - build the Docker image
 - push it to Docker Hub
-- update the Azure App Service container
+- update the Azure App Service container image
 - set app settings including `OPENAI_API_KEY`, `WEBSITES_PORT=8501`, and `SQLITE_DB_PATH=/home/data.db`
 - restart the Azure Web App
 

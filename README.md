@@ -13,17 +13,17 @@ Local quick start:
 1. python -m pip install -r requirements.txt
 2. python -m streamlit run app.py
 
-Azure CI/CD deployment:
+GitHub → Azure CI/CD deployment:
 
-This repository includes a GitHub Actions workflow for automatic deployment to Azure App Service using Docker containers.
+This repository includes a GitHub Actions workflow for automatic deployment from GitHub to Azure App Service using Docker containers.
 
 Workflow behavior:
 
 1. Push to the `main` branch.
-2. GitHub Actions logs in to Azure and Docker Hub.
+2. GitHub Actions authenticates to Azure and Docker Hub.
 3. The app is containerized and published to Docker Hub.
-4. The Azure Web App container is updated to the latest image.
-5. App settings such as `OPENAI_API_KEY`, `WEBSITES_PORT`, and `SQLITE_DB_PATH` are configured automatically.
+4. The Azure Web App is updated to pull the latest image automatically.
+5. App settings such as `OPENAI_API_KEY`, `WEBSITES_PORT`, and `SQLITE_DB_PATH` are configured automatically during deployment.
 
 Required GitHub secrets:
 
