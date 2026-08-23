@@ -140,36 +140,44 @@ except Exception:
     requests = None
 
 st.markdown("---")
-st.header("How MCP uses Generative AI (Model Context Protocol)")
+st.header("Professional AI Assistant (MCP Context)")
 st.markdown(
     """
-    This demo shows the Model Context Protocol in practice:
-    1) The application builds a `messages` array (roles: system, user, assistant) that represents the conversation context.
-    2) A system message encodes MCP policies and the assistant's role (e.g., summarize data, be concise, include numeric insights).
-    3) User messages are appended as the user interacts; assistant replies are appended back to the context, preserving history.
-    4) The full `messages` array is sent to the Chat Completions API so the model has conversational context when generating responses.
+    Ask general professional questions, not only CSV/SQL tasks.
+    The assistant can optionally include dataset and SQL context when relevant.
     """
 )
 
 openai_key = os.environ.get('OPENAI_API_KEY')
-if openai_key:
-    st.subheader("Interactive Chat Using Model Context")
+openai_model = os.environ.get('OPENAI_MODEL', 'gpt-4o-mini')
+if openai_key and requests is not None:
+    st.subheader("Ask anything")
 
     # Initialize session state for messages
     if 'messages' not in st.session_state:
         st.session_state['messages'] = [
-            {"role": "system", "content": "You are an assistant that summarizes CSV data and provides clear, concise insights. When asked, include a short numeric summary (mean, min, max) and one sentence recommendation."}
+            {
+                "role": "system",
+                "content": (
+                    "You are a professional AI assistant. "
+                    "Answer any user question clearly and accurately. "
+                    "Use concise, structured responses when helpful. "
+                    "If data context is provided, incorporate it; otherwise answer as a general assistant."
+                )
+            }
         ]
 
     # Show conversation history
-    st.markdown("**Conversation context (most recent first)**")
-    for m in reversed(st.session_state['messages'][-8:]):
-        st.write(f"**{m['role']}**: {m['content']}")
+    st.markdown("**Conversation (latest 8 turns)**")
+    for m in st.session_state['messages'][-8:]:
+        if m['role'] != 'system':
+            st.write(f"**{m['role'].capitalize()}**: {m['content']}")
 
     st.markdown("---")
-    prompt = st.text_area("Enter your prompt (example: 'Summarize this dataset and give one recommendation')")
+    prompt = st.text_area("Enter your prompt", placeholder="Ask anything: planning, writing, coding, strategy, analysis...")
 
-    include_data_summary = st.checkbox("Include automatic data summary in context", value=True)
+    include_data_summary = st.checkbox("Include CSV data summary in context", value=False)
+    include_last_sql_summary = st.checkbox("Include saved SQL summary in context", value=False)
 
     if st.button("Send to OpenAI") and prompt:
         # Build messages payload from session state and current input
@@ -178,18 +186,19 @@ if openai_key:
         # Optionally include a short auto-generated data summary as a user-level context message
         if include_data_summary:
             try:
-                df_preview = df.head(20)
                 numeric = df.select_dtypes(include=[np.number])
                 summary = ''
                 if not numeric.empty:
                     stats = numeric.describe().loc[['mean','min','max']].to_dict()
-                    summary = f"Numeric summary (showing mean/min/max for numeric cols): { {k: v for k,v in stats.items()} }"
+                    summary = f"CSV numeric summary (mean/min/max): {stats}"
                 else:
-                    summary = 'No numeric columns to summarize.'
-                messages.append({"role": "user", "content": f"DATA_SUMMARY: {summary}"})
+                    summary = 'CSV has no numeric columns.'
+                messages.append({"role": "system", "content": summary})
             except Exception:
-                # fallback if df not available
-                messages.append({"role": "user", "content": "DATA_SUMMARY: unavailable"})
+                messages.append({"role": "system", "content": "CSV summary unavailable due to processing issue."})
+
+        if include_last_sql_summary and st.session_state.get('last_query'):
+            messages.append({"role": "system", "content": f"SQL summary context: {st.session_state['last_query']}"})
 
         # Add the user's prompt
         messages.append({"role": "user", "content": prompt})
@@ -229,12 +238,16 @@ if openai_key:
                 "temperature": 0.2
             }
             headers = {"Authorization": f"Bearer {openai_key}", "Content-Type": "application/json"}
+            body["model"] = openai_model
+            body["max_tokens"] = 500
+            headers = {"Authorization": f"Bearer {openai_key}", "Content-Type": "application/json"}
             resp = requests.post(url, headers=headers, json=body, timeout=30)
             resp.raise_for_status()
             j = resp.json()
             assistant_text = j['choices'][0]['message']['content'] if 'choices' in j and j['choices'] else str(j)
 
-            # Append assistant reply to session context
+            # Append turn to session context
+            st.session_state['messages'].append({"role": "user", "content": prompt})
             st.session_state['messages'].append({"role": "assistant", "content": assistant_text})
 
             # Log compact response
@@ -265,10 +278,25 @@ if openai_key:
             st.error(f"OpenAI call failed: {e}")
 
     st.markdown("---")
-    st.button("Reset conversation", on_click=lambda: st.session_state.clear())
+    if st.button("Reset conversation"):
+        st.session_state['messages'] = [
+            {
+                "role": "system",
+                "content": (
+                    "You are a professional AI assistant. "
+                    "Answer any user question clearly and accurately. "
+                    "Use concise, structured responses when helpful. "
+                    "If data context is provided, incorporate it; otherwise answer as a general assistant."
+                )
+            }
+        ]
+        st.success("Conversation reset.")
 
 else:
-    st.info("Set OPENAI_API_KEY environment variable to enable OpenAI demo.")
+    if not openai_key:
+        st.info("Set OPENAI_API_KEY to enable the AI Assistant.")
+    else:
+        st.error("`requests` dependency is missing. Install dependencies from requirements.txt.")
 
 # AI call audit: read recent entries from ai_calls table
 st.subheader("AI call audit (recent)")
