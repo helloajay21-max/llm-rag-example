@@ -52,7 +52,7 @@ jobs:
           az webapp config appsettings set \
             --name ${{ secrets.WEBAPP_NAME }} \
             --resource-group ${{ secrets.RESOURCE_GROUP }} \
-            --settings OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" WEBSITES_PORT=8501 SQLITE_DB_PATH=/home/data.db
+            --settings OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" OPENAI_MODEL=gpt-4o-mini WEBSITES_PORT=8501 SQLITE_DB_PATH=/home/data.db
 
       - name: Restart web app
         run: az webapp restart --name ${{ secrets.WEBAPP_NAME }} --resource-group ${{ secrets.RESOURCE_GROUP }}

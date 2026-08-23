@@ -24,6 +24,18 @@ streamlit run app.py
 
 App runs at http://localhost:8501
 
+### AI assistant capabilities
+
+The app includes a professional AI assistant with:
+- mode switch: General Assistant / Data Analyst / SQL Expert / Report Writer
+- response style control: Concise / Balanced / Detailed
+- optional CSV numeric summary context
+- optional saved SQL-result context
+- structured markdown output sections (Answer, Key Points, Evidence, Assumptions, Source Notes)
+
+Optional environment variable:
+- `OPENAI_MODEL` (default: `gpt-4o-mini`)
+
 ### Run with Docker locally
 
 ```bash
@@ -89,7 +101,7 @@ Push to `main` branch. The workflow `.github/workflows/azure-container-deploy.ym
 3. Build Docker image from `./mcp-project`
 4. Push image to Docker Hub
 5. Set container image on Azure Web App
-6. Set app settings (`OPENAI_API_KEY`, `WEBSITES_PORT=8501`, `SQLITE_DB_PATH=/home/data.db`)
+6. Set app settings (`OPENAI_API_KEY`, `OPENAI_MODEL=gpt-4o-mini`, `WEBSITES_PORT=8501`, `SQLITE_DB_PATH=/home/data.db`)
 7. Restart the Web App
 
 ---
