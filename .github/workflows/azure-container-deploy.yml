@@ -1,0 +1,68 @@
+name: Build and Deploy to Azure App Service (Container)
+
+on:
+  push:
+    branches: [ main, master ]
+
+env:
+  IMAGE_NAME: mcp-streamlit
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push image to Docker Hub
+        run: |
+          IMAGE_TAG=${{ github.sha }}
+          IMAGE_NAME=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:$IMAGE_TAG
+          docker build -t $IMAGE_NAME .
+          docker push $IMAGE_NAME
+        env:
+          DOCKER_BUILDKIT: 1
+
+      - name: Configure web app to use new image (Docker Hub)
+        run: |
+          IMAGE_TAG=${{ github.sha }}
+          IMAGE_NAME=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:$IMAGE_TAG
+          az webapp config container set \
+            --name ${{ secrets.WEBAPP_NAME }} \
+            --resource-group ${{ secrets.RESOURCE_GROUP }} \
+            --docker-custom-image-name $IMAGE_NAME \
+            --docker-registry-server-url https://index.docker.io \
+            --docker-registry-server-user ${{ secrets.DOCKERHUB_USERNAME }} \
+            --docker-registry-server-password ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Configure app settings
+        run: |
+          az webapp config appsettings set \
+            --name ${{ secrets.WEBAPP_NAME }} \
+            --resource-group ${{ secrets.RESOURCE_GROUP }} \
+            --settings OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}" WEBSITES_PORT=8501 SQLITE_DB_PATH=/home/data.db
+
+      - name: Restart web app
+        run: az webapp restart --name ${{ secrets.WEBAPP_NAME }} --resource-group ${{ secrets.RESOURCE_GROUP }}
+
+# Required secrets:
+# AZURE_CREDENTIALS (create with `az ad sp create-for-rbac --sdk-auth`)
+# KEY_VAULT_NAME (name of the Azure Key Vault which contains OpenAIKey)
+# DOCKERHUB_USERNAME
+# DOCKERHUB_TOKEN (or Docker Hub password)
+# RESOURCE_GROUP
+# WEBAPP_NAME
+# NOTE: The service principal in AZURE_CREDENTIALS must have 'get' permission on the Key Vault secret, or use a managed identity with access to Key Vault.
+# NOTE: For public Docker Hub images, registry user/password are not required to be set on the Web App.
